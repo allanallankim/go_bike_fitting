@@ -8,6 +8,8 @@ import { PrescriptionReport } from '../components/PrescriptionReport';
 import { ScaleCalibrator } from '../components/ScaleCalibrator';
 import { BikeGeometryDatabase } from '../components/BikeGeometryDatabase';
 import { InteractiveSimulator } from '../components/InteractiveSimulator';
+import { BikePartsGuide } from '../components/BikePartsGuide';
+import { BikePartsModal } from '../components/BikePartsModal';
 import { SAMPLE_PRESETS, SamplePreset } from '../data/samples';
 import { BIKE_DATABASE, BikeGeometry } from '../data/bikes';
 import {
@@ -27,7 +29,8 @@ import {
   Info,
   CheckCircle2,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  Bike
 } from 'lucide-react';
 
 export default function Home() {
@@ -68,7 +71,10 @@ export default function Home() {
   });
 
   // Active Right-side Tab
-  const [activeTab, setActiveTab] = useState<'diagnostics' | 'prescription' | 'calibration' | 'geometry' | 'simulator'>('diagnostics');
+  const [activeTab, setActiveTab] = useState<'diagnostics' | 'prescription' | 'calibration' | 'geometry' | 'simulator' | 'parts'>('diagnostics');
+
+  // Bike parts modal state
+  const [isBikePartsModalOpen, setIsBikePartsModalOpen] = useState(false);
 
   // Compute live fitting metrics whenever landmarks, side, mmPerPixel or ridingStyle changes
   const metrics: FittingMetrics | null = useMemo(() => {
@@ -120,6 +126,7 @@ export default function Home() {
         setSide={setSide}
         onPrint={handlePrint}
         onReset={handleReset}
+        onOpenBikeParts={() => setIsBikePartsModalOpen(true)}
       />
 
       {/* Main Container */}
@@ -272,6 +279,17 @@ export default function Home() {
                 <Sliders className="w-3.5 h-3.5" />
                 샌드박스
               </button>
+              <button
+                onClick={() => setActiveTab('parts')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition whitespace-nowrap ${
+                  activeTab === 'parts'
+                    ? 'bg-cyan-500 text-slate-950 font-bold shadow-md'
+                    : 'text-cyan-400 hover:text-white'
+                }`}
+              >
+                <Bike className="w-3.5 h-3.5" />
+                부위별 명칭
+              </button>
             </div>
 
             {/* Active Tab Content */}
@@ -321,6 +339,12 @@ export default function Home() {
                   setLandmarks={setLandmarks}
                   side={side}
                 />
+              )}
+
+              {activeTab === 'parts' && (
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                  <BikePartsGuide />
+                </div>
               )}
             </div>
           </div>
@@ -377,6 +401,22 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Full-width Section: Bike Parts Anatomy Guide */}
+        <div className="pt-6 border-t border-slate-800" id="bike-parts-guide">
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Bike className="w-5 h-5 text-cyan-400" />
+                자전거 부위별 명칭 (Parts of the Bike)
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                피팅 처방 시 필요한 로드 자전거 및 산악 자전거 공식 부품 명칭 가이드 (순서대로 3편 수록)
+              </p>
+            </div>
+          </div>
+          <BikePartsGuide />
+        </div>
+
         {/* Recommended Service Link */}
         <div className="bg-gradient-to-r from-cyan-950/40 via-slate-900 to-emerald-950/40 border border-slate-800 hover:border-cyan-700/60 rounded-2xl p-4 sm:p-5 transition shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3.5 text-center sm:text-left">
@@ -419,6 +459,12 @@ export default function Home() {
           <span>연락처: <a href="mailto:dkffks@gmail.com" className="text-cyan-400 hover:underline">dkffks@gmail.com</a></span>
         </div>
       </footer>
+
+      {/* Bike Parts Fullscreen Modal */}
+      <BikePartsModal
+        isOpen={isBikePartsModalOpen}
+        onClose={() => setIsBikePartsModalOpen(false)}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Activity, Camera, Video, Image as ImageIcon, Sparkles, Printer, RotateCcw } from 'lucide-react';
+import { Activity, Camera, Video, Image as ImageIcon, Sparkles, Printer, RotateCcw, Bike } from 'lucide-react';
 import { RiderSide } from '../lib/fittingCalc';
 
 interface HeaderProps {
@@ -11,6 +11,7 @@ interface HeaderProps {
   setSide: (side: RiderSide) => void;
   onPrint: () => void;
   onReset: () => void;
+  onOpenBikeParts?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   setSide,
   onPrint,
   onReset,
+  onOpenBikeParts,
 }) => {
   return (
     <header className="bg-slate-900/90 backdrop-blur border-b border-slate-800 text-white sticky top-0 z-50 px-4 py-3">
@@ -124,6 +126,19 @@ export const Header: React.FC<HeaderProps> = ({
               우측 (Drive-side)
             </button>
           </div>
+
+          {/* Bike Parts Guide button */}
+          {onOpenBikeParts && (
+            <button
+              onClick={onOpenBikeParts}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-950/70 hover:bg-cyan-900 text-cyan-400 hover:text-cyan-300 border border-cyan-800 text-xs font-semibold transition"
+              title="자전거 부위별 명칭 (로드/MTB) 가이드"
+            >
+              <Bike className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">자전거 부위별 명칭</span>
+              <span className="sm:hidden">부위별 명칭</span>
+            </button>
+          )}
 
           {/* Reset button */}
           <button
