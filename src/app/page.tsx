@@ -26,7 +26,8 @@ import {
   Sparkles,
   Info,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ExternalLink
 } from 'lucide-react';
 
 export default function Home() {
@@ -375,14 +376,48 @@ export default function Home() {
             </p>
           </div>
         </div>
+
+        {/* Recommended Service Link */}
+        <div className="bg-gradient-to-r from-cyan-950/40 via-slate-900 to-emerald-950/40 border border-slate-800 hover:border-cyan-700/60 rounded-2xl p-4 sm:p-5 transition shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 text-center sm:text-left">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0 text-lg">
+              🚴
+            </div>
+            <div>
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <span className="text-sm font-bold text-white">자전거 라이딩 Helper</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">
+                  추천 서비스
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                기상 상황과 코스 바람, 라이딩 최적 시간대를 한눈에 확인하는 라이딩 헬퍼 서비스
+              </p>
+            </div>
+          </div>
+          <a
+            href="https://cycling-weather.onrender.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-md shadow-cyan-500/20 transition shrink-0"
+          >
+            <span>자전거 라이딩 Helper 바로가기</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500 mt-10">
-        <p>RoadFit AI Studio • Client-side AI Computer Vision Bike Fitting System</p>
-        <p className="mt-1 text-[11px] text-slate-600">
+      <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500 mt-10 space-y-2">
+        <p className="font-medium text-slate-400">RoadFit AI Studio • Client-side AI Computer Vision Bike Fitting System</p>
+        <p className="text-[11px] text-slate-500">
           모든 비디오 및 사진 분석은 사용자의 브라우저(Client-side) 내부에서 안전하게 처리되며 외부 서버로 전송되지 않습니다.
         </p>
+        <div className="pt-2 border-t border-slate-900 flex items-center justify-center gap-3 text-xs text-slate-400">
+          <span>제작자: <strong className="text-slate-200 font-semibold">알란</strong></span>
+          <span className="text-slate-700">•</span>
+          <span>연락처: <a href="mailto:dkffks@gmail.com" className="text-cyan-400 hover:underline">dkffks@gmail.com</a></span>
+        </div>
       </footer>
     </div>
   );
