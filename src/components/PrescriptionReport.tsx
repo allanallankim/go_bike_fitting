@@ -48,11 +48,15 @@ export const PrescriptionReport: React.FC<PrescriptionReportProps> = ({
     kopsOffsetMm,
     saddleHeightDiffMm,
     saddleForeAftDiffMm,
+    saddleHeightCompensationMm,
     reachDiffMm,
     score,
     kneeStatus,
     kopsStatus,
     reachStatus,
+    torsoStatus,
+    shoulderStatus,
+    kopsLimitExceeded,
   } = metrics;
 
   const [currentDate, setCurrentDate] = React.useState<string>('');
@@ -151,10 +155,19 @@ export const PrescriptionReport: React.FC<PrescriptionReportProps> = ({
             className={`p-4 rounded-xl border transition ${
               saddleForeAftDiffMm === 0
                 ? 'bg-emerald-950/30 border-emerald-800/60'
+                : kopsLimitExceeded
+                ? 'bg-rose-950/20 border-rose-800/70'
                 : 'bg-slate-950/70 border-slate-800'
             }`}
           >
-            <div className="text-[11px] text-slate-400 font-medium">2단계: 안장 전후 위치 (Setback)</div>
+            <div className="flex items-center justify-between">
+              <div className="text-[11px] text-slate-400 font-medium">2단계: 안장 전후 위치 (Setback)</div>
+              {kopsLimitExceeded && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800 animate-pulse">
+                  한계 초과
+                </span>
+              )}
+            </div>
             <div className="text-2xl font-black mt-1 text-white print:text-black">
               {saddleForeAftDiffMm === 0 ? (
                 <span className="text-emerald-400 text-lg">레일 위치 유지 (0mm)</span>
@@ -171,6 +184,39 @@ export const PrescriptionReport: React.FC<PrescriptionReportProps> = ({
                 ? '무릎이 페달축보다 앞으로 쏠려 슬개골 연골 압박이 높습니다. 안장 레일을 뒤로 밀어주세요.'
                 : '무릎이 페달축보다 뒤에 있어 둔근 효율이 떨어집니다. 안장 레일을 앞으로 당겨주세요.'}
             </p>
+
+            {/* 물리적 한계 경고 배너 (Constraint Warning Banner) */}
+            {kopsLimitExceeded && (
+              <div className="mt-3 p-2.5 rounded-lg bg-rose-950/80 border border-rose-600/80 text-rose-200 text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-rose-300 mb-1">
+                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                  안장 레일 조절 한계(±25mm) 초과 경고
+                </div>
+                <p className="leading-relaxed text-[11px] text-rose-100">
+                  일반 로드 안장 레일의 전후 유효 조절 폭은 약 <strong>±20~25mm 내외</strong>입니다.
+                  현재 산출된 조절량(<strong>{saddleForeAftDiffMm > 0 ? `+${saddleForeAftDiffMm}` : saddleForeAftDiffMm}mm</strong>)은 레일 이동만으로는 물리적으로 불가능합니다.
+                </p>
+                <div className="mt-1.5 pt-1.5 border-t border-rose-800/80 text-[11px] text-amber-200 font-medium">
+                  👉 <strong>권장 해결책</strong>: 셋백 싯포스트를 <strong>제로 셋백(0mm) 싯포스트로 교체</strong>하거나 <strong>프레임 사이즈(리치/지오메트리) 재검토</strong>가 필요합니다.
+                </div>
+              </div>
+            )}
+
+            {/* 안장 전후-높이 상호보완적 연동 안내 가이드 */}
+            <div className="mt-2.5 p-2.5 rounded-lg bg-cyan-950/40 border border-cyan-800/50 text-[11px] text-cyan-200">
+              <div className="flex items-center gap-1.5 font-bold text-cyan-300 mb-0.5">
+                <Info className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                안장 전후-높이 상호 연동 가이드
+              </div>
+              <p className="leading-relaxed text-slate-300">
+                안장을 10mm 앞으로 당기면 크랭크 축(BB)과의 거리가 가까워지므로, 안장 높이(Saddle Height)도 함께 <strong>약 2~3mm 올려야</strong> 동일한 무릎 각도가 유지됩니다.
+                {saddleForeAftDiffMm !== 0 && (
+                  <span className="block mt-1 text-cyan-300 font-semibold">
+                    ↳ 현재 조절 연동 권장: 안장 {saddleForeAftDiffMm > 0 ? `${saddleForeAftDiffMm}mm 전진 시` : `${Math.abs(saddleForeAftDiffMm)}mm 후퇴 시`} 안장 높이 <strong>{saddleHeightCompensationMm > 0 ? `+${saddleHeightCompensationMm}mm 상향` : `${saddleHeightCompensationMm}mm 하향`}</strong> 보정 필요
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
 
           {/* Cockpit / Stem Length */}
@@ -226,9 +272,11 @@ export const PrescriptionReport: React.FC<PrescriptionReportProps> = ({
                 <td className="py-2.5 px-4">140° ~ 150°</td>
                 <td className="py-2.5 px-4">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                    kneeStatus === 'OPTIMAL' ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'
+                    kneeStatus === 'OPTIMAL'
+                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                      : 'bg-rose-950 text-rose-400 border border-rose-800'
                   }`}>
-                    {kneeStatus}
+                    {kneeStatus === 'OPTIMAL' ? '적정' : kneeStatus === 'LOW' ? '안장 낮음' : '안장 높음'}
                   </span>
                 </td>
                 <td className="py-2.5 px-4 text-slate-400">페달 하사점(6시)에서 측정</td>
@@ -239,12 +287,20 @@ export const PrescriptionReport: React.FC<PrescriptionReportProps> = ({
                 <td className="py-2.5 px-4">-10 mm ~ +10 mm</td>
                 <td className="py-2.5 px-4">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                    kopsStatus === 'OPTIMAL' ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'
+                    kopsStatus === 'OPTIMAL'
+                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                      : 'bg-rose-950 text-rose-400 border border-rose-800'
                   }`}>
-                    {kopsStatus}
+                    {kopsStatus === 'OPTIMAL' ? '적정 (균형)' : kopsStatus === 'TOO_FORWARD' ? '전방 과다' : '후방 과다'}
                   </span>
                 </td>
-                <td className="py-2.5 px-4 text-slate-400">크랭크 3시 수평 시 무릎 vs 페달축</td>
+                <td className="py-2.5 px-4 text-slate-400">
+                  {kopsLimitExceeded ? (
+                    <span className="text-amber-400 font-semibold">⚠️ 안장 조절 한계(±25mm) 초과</span>
+                  ) : (
+                    '크랭크 3시 수평 시 무릎 vs 페달축'
+                  )}
+                </td>
               </tr>
               <tr>
                 <td className="py-2.5 px-4 font-medium text-white print:text-black">팔꿈치 굽힘 각도</td>
@@ -252,9 +308,11 @@ export const PrescriptionReport: React.FC<PrescriptionReportProps> = ({
                 <td className="py-2.5 px-4">150° ~ 165°</td>
                 <td className="py-2.5 px-4">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                    reachStatus === 'OPTIMAL' ? 'bg-emerald-950 text-emerald-400' : 'bg-amber-950 text-amber-400'
+                    reachStatus === 'OPTIMAL'
+                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                      : 'bg-amber-950 text-amber-400 border border-amber-800'
                   }`}>
-                    {reachStatus}
+                    {reachStatus === 'OPTIMAL' ? '적정' : reachStatus === 'TOO_LONG' ? '리치 과다' : '리치 짧음'}
                   </span>
                 </td>
                 <td className="py-2.5 px-4 text-slate-400">후드 파지 시 충격 완화 각도</td>
@@ -264,22 +322,42 @@ export const PrescriptionReport: React.FC<PrescriptionReportProps> = ({
                 <td className="py-2.5 px-4 font-bold text-slate-200">{torsoAngle}°</td>
                 <td className="py-2.5 px-4">35° ~ 50°</td>
                 <td className="py-2.5 px-4">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300">
-                    정상
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    torsoStatus === 'OPTIMAL'
+                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                      : 'bg-rose-950 text-rose-400 border border-rose-800'
+                  }`}>
+                    {torsoStatus === 'OPTIMAL' ? '적정' : torsoStatus === 'TOO_LOW' ? '상체 과숙임' : '상체 기립'}
                   </span>
                 </td>
-                <td className="py-2.5 px-4 text-slate-400">수평선 대비 척추 전경각</td>
+                <td className="py-2.5 px-4 text-slate-400">
+                  {torsoStatus === 'TOO_LOW'
+                    ? '수평 대비 과도하게 숙여짐 (허리/목 부담 유발)'
+                    : torsoStatus === 'TOO_UPRIGHT'
+                    ? '상체가 과도하게 서있음 (공기 저항 증가)'
+                    : '수평선 대비 이상적 척추 전경각'}
+                </td>
               </tr>
               <tr>
                 <td className="py-2.5 px-4 font-medium text-white print:text-black">어깨-몸통 각도</td>
                 <td className="py-2.5 px-4 font-bold text-slate-200">{shoulderAngle}°</td>
                 <td className="py-2.5 px-4">85° ~ 95°</td>
                 <td className="py-2.5 px-4">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300">
-                    정상
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    shoulderStatus === 'OPTIMAL'
+                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                      : 'bg-rose-950 text-rose-400 border border-rose-800'
+                  }`}>
+                    {shoulderStatus === 'OPTIMAL' ? '적정' : shoulderStatus === 'TOO_OPEN' ? '어깨 과신전' : '어깨 협소'}
                   </span>
                 </td>
-                <td className="py-2.5 px-4 text-slate-400">상체와 상완(Shoulder-Elbow) 사이 각도</td>
+                <td className="py-2.5 px-4 text-slate-400">
+                  {shoulderStatus === 'TOO_OPEN'
+                    ? '어깨가 과도하게 앞으로 뻗음 (승모근/손목 피로)'
+                    : shoulderStatus === 'TOO_CLOSED'
+                    ? '어깨가 좁혀져 흉부 압박'
+                    : '상체와 상완(Shoulder-Elbow) 사이 적정 각도'}
+                </td>
               </tr>
             </tbody>
           </table>

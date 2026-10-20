@@ -34,11 +34,15 @@ export interface FittingMetrics {
   kopsOffsetPx: number;      // pixels
   saddleHeightDiffMm: number;// Recommended change (+ means raise, - means lower)
   saddleForeAftDiffMm: number;// Recommended change (+ means move forward, - means move back)
+  saddleHeightCompensationMm: number; // Height compensation linked to fore-aft (+2~3mm per 10mm fore)
   reachDiffMm: number;       // Recommended reach change (+ means increase stem/reach)
   score: number;             // Overall fitting score 0 ~ 100
   kneeStatus: 'OPTIMAL' | 'LOW' | 'HIGH';
   kopsStatus: 'OPTIMAL' | 'TOO_FORWARD' | 'TOO_BACK' | 'UNKNOWN';
   reachStatus: 'OPTIMAL' | 'TOO_LONG' | 'TOO_SHORT';
+  torsoStatus: 'OPTIMAL' | 'TOO_LOW' | 'TOO_UPRIGHT';
+  shoulderStatus: 'OPTIMAL' | 'TOO_OPEN' | 'TOO_CLOSED';
+  kopsLimitExceeded: boolean;// Whether fore-aft adjustment exceeds physical rail limits (±25mm)
   pedalingPhase: 'BDC' | 'KOPS_3_OCLOCK' | 'TOP' | 'TRANSITION';
 }
 
@@ -202,6 +206,16 @@ export function analyzeFitting(
     saddleForeAftDiffMm = 0;
   }
 
+  // Saddle rail physical adjustment constraint check
+  // Standard road saddle rails typically allow ±20~25mm adjustment.
+  const kopsLimitExceeded = Math.abs(saddleForeAftDiffMm) > 25;
+
+  // Saddle height compensation linked to fore-aft movement:
+  // With a seat tube angle around 73°~74°, moving the saddle forward by 10mm brings it ~2.5~3mm closer to the BB.
+  // Therefore, raising the saddle by ~2.5mm per 10mm of forward slide maintains constant leg extension.
+  // Moving saddle back increases distance to BB -> saddle should be lowered slightly.
+  const saddleHeightCompensationMm = Math.round(saddleForeAftDiffMm * 0.25);
+
   // Reach & Cockpit Evaluation based on elbow and shoulder
   // Ideal elbow: 150° ~ 165° (slight bend)
   // Ideal shoulder: 80° ~ 95°
@@ -219,6 +233,26 @@ export function analyzeFitting(
   } else {
     reachStatus = 'OPTIMAL';
     reachDiffMm = 0;
+  }
+
+  // Torso inclination evaluation
+  // Recommended ranges: All-Round 35°~50°, Aero 30°~45°, Endurance 40°~55°
+  const torsoMin = ridingStyle === 'Aero' ? 30 : ridingStyle === 'Endurance' ? 40 : 35;
+  const torsoMax = ridingStyle === 'Aero' ? 45 : ridingStyle === 'Endurance' ? 55 : 50;
+  let torsoStatus: 'OPTIMAL' | 'TOO_LOW' | 'TOO_UPRIGHT' = 'OPTIMAL';
+  if (torsoAngle < torsoMin) {
+    torsoStatus = 'TOO_LOW';
+  } else if (torsoAngle > torsoMax) {
+    torsoStatus = 'TOO_UPRIGHT';
+  }
+
+  // Shoulder-Torso angle evaluation
+  // Recommended range: 85° ~ 95°
+  let shoulderStatus: 'OPTIMAL' | 'TOO_OPEN' | 'TOO_CLOSED' = 'OPTIMAL';
+  if (shoulderAngle > 95) {
+    shoulderStatus = 'TOO_OPEN';
+  } else if (shoulderAngle < 85) {
+    shoulderStatus = 'TOO_CLOSED';
   }
 
   // Compute Overall Fitting Score (0 ~ 100)
@@ -257,11 +291,15 @@ export function analyzeFitting(
     kopsOffsetPx: Math.round(kopsOffsetPx * 10) / 10,
     saddleHeightDiffMm,
     saddleForeAftDiffMm,
+    saddleHeightCompensationMm,
     reachDiffMm,
     score,
     kneeStatus,
     kopsStatus,
     reachStatus,
+    torsoStatus,
+    shoulderStatus,
+    kopsLimitExceeded,
     pedalingPhase,
   };
 }

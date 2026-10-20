@@ -37,11 +37,15 @@ export const FittingDiagnostics: React.FC<FittingDiagnosticsProps> = ({
     kopsOffsetMm,
     saddleHeightDiffMm,
     saddleForeAftDiffMm,
+    saddleHeightCompensationMm,
     reachDiffMm,
     score,
     kneeStatus,
     kopsStatus,
     reachStatus,
+    torsoStatus,
+    shoulderStatus,
+    kopsLimitExceeded,
     pedalingPhase,
   } = metrics;
 
@@ -193,15 +197,22 @@ export const FittingDiagnostics: React.FC<FittingDiagnosticsProps> = ({
                 <Compass className="w-3.5 h-3.5 text-amber-400" />
                 KOPS (크랭크 3시 전후 위치)
               </span>
-              <span
-                className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                  kopsStatus === 'OPTIMAL'
-                    ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                    : 'bg-rose-950 text-rose-400 border border-rose-800'
-                }`}
-              >
-                {kopsStatus === 'OPTIMAL' ? '균형' : kopsStatus === 'TOO_FORWARD' ? '전방 과다' : '후방 과다'}
-              </span>
+              <div className="flex items-center gap-1">
+                {kopsLimitExceeded && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-950 text-rose-400 border border-rose-800 animate-pulse">
+                    한계 초과
+                  </span>
+                )}
+                <span
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                    kopsStatus === 'OPTIMAL'
+                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                      : 'bg-rose-950 text-rose-400 border border-rose-800'
+                  }`}
+                >
+                  {kopsStatus === 'OPTIMAL' ? '균형' : kopsStatus === 'TOO_FORWARD' ? '전방 과다' : '후방 과다'}
+                </span>
+              </div>
             </div>
 
             <div className="flex items-baseline gap-2 mb-2">
@@ -227,9 +238,20 @@ export const FittingDiagnostics: React.FC<FittingDiagnosticsProps> = ({
                 <span>+30mm(전방)</span>
               </div>
             </div>
+
+            {/* 조절 한계 경고 (물리적 한계) */}
+            {kopsLimitExceeded && (
+              <div className="p-2 mb-2 rounded-lg bg-rose-950/70 border border-rose-800/80 text-[11px] text-rose-200 leading-snug">
+                <span className="font-bold flex items-center gap-1 text-rose-300">
+                  <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                  안장 레일 조절 한계(±25mm) 초과
+                </span>
+                제로 셋백(0mm) 싯포스트 교체 또는 프레임 사이즈 재검토를 권장합니다.
+              </div>
+            )}
           </div>
 
-          <div className="pt-2 border-t border-slate-800/80">
+          <div className="pt-2 border-t border-slate-800/80 space-y-1">
             {saddleForeAftDiffMm === 0 ? (
               <p className="text-xs text-emerald-400 flex items-center gap-1 font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5" /> 안장 전후 위치가 완벽합니다.
@@ -243,6 +265,13 @@ export const FittingDiagnostics: React.FC<FittingDiagnosticsProps> = ({
               <p className="text-xs text-amber-300 flex items-center gap-1 font-semibold">
                 <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" />
                 안장 레일을 약 <strong>+{saddleForeAftDiffMm}mm 앞으로</strong> 당기세요
+              </p>
+            )}
+
+            {/* 연동 안내 */}
+            {saddleForeAftDiffMm !== 0 && (
+              <p className="text-[10px] text-slate-400 leading-tight">
+                💡 안장 {saddleForeAftDiffMm > 0 ? '전진' : '후퇴'} 시 안장 높이도 <strong>{saddleHeightCompensationMm > 0 ? `+${saddleHeightCompensationMm}mm` : `${saddleHeightCompensationMm}mm`}</strong> 연동 조절 필요
               </p>
             )}
           </div>
@@ -268,20 +297,38 @@ export const FittingDiagnostics: React.FC<FittingDiagnosticsProps> = ({
             </div>
 
             <div className="grid grid-cols-2 gap-2 mb-2">
-              <div>
+              <div className="p-2 rounded-xl bg-slate-950/50 border border-slate-800/80">
                 <span className="text-[10px] text-slate-400 block">팔꿈치 각도</span>
                 <span className="text-xl font-bold text-white">{elbowAngle}°</span>
                 <span className="text-[9px] text-slate-500 block">권장: 150°~165°</span>
               </div>
-              <div>
-                <span className="text-[10px] text-slate-400 block">허리/상체 각도</span>
+              <div className="p-2 rounded-xl bg-slate-950/50 border border-slate-800/80">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400">허리/상체 각도</span>
+                  <span className={`text-[9px] font-bold px-1 rounded ${
+                    torsoStatus === 'OPTIMAL'
+                      ? 'text-emerald-400 bg-emerald-950/80'
+                      : 'text-rose-400 bg-rose-950/80'
+                  }`}>
+                    {torsoStatus === 'OPTIMAL' ? '적정' : torsoStatus === 'TOO_LOW' ? '과숙임' : '과기립'}
+                  </span>
+                </div>
                 <span className="text-xl font-bold text-white">{torsoAngle}°</span>
-                <span className="text-[9px] text-slate-500 block">권장: 35°~48°</span>
+                <span className="text-[9px] text-slate-500 block">권장: 35°~50°</span>
               </div>
             </div>
 
-            <div className="text-[11px] text-slate-400 mb-2">
-              어깨-상완 각도: <strong className="text-slate-200">{shoulderAngle}°</strong> (권장 85°~90°)
+            <div className="text-[11px] text-slate-400 mb-2 flex items-center justify-between bg-slate-950/40 p-2 rounded-lg border border-slate-800/60">
+              <span>
+                어깨-상완 각도: <strong className="text-slate-200">{shoulderAngle}°</strong> <span className="text-[10px] text-slate-500">(권장 85°~95°)</span>
+              </span>
+              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                shoulderStatus === 'OPTIMAL'
+                  ? 'text-emerald-400 bg-emerald-950/80'
+                  : 'text-rose-400 bg-rose-950/80'
+              }`}>
+                {shoulderStatus === 'OPTIMAL' ? '적정' : shoulderStatus === 'TOO_OPEN' ? '과신전' : '협소'}
+              </span>
             </div>
           </div>
 

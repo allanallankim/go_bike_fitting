@@ -334,7 +334,7 @@ export default function Home() {
         </div>
 
         {/* Informational Guidance Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-400">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs text-slate-400">
           <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
             <h4 className="font-bold text-white mb-1.5 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-cyan-400" />
@@ -348,10 +348,10 @@ export default function Home() {
           <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
             <h4 className="font-bold text-white mb-1.5 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-amber-400" />
-              2. KOPS (Knee Over Pedal Spindle)
+              2. KOPS 및 안장 셋백 조절 한계
             </h4>
             <p className="leading-relaxed">
-              크랭크가 전방 3시 수평 위치일 때 슬개골 앞쪽에서 내린 수직선이 페달 스핀들(축)과 일치해야 합니다. 안장이 너무 앞서면 무릎 연골 압박이 커지고, 너무 뒤에 있으면 페달링 케이던스 회전력이 감소합니다.
+              크랭크 3시 전방 수평 시 슬개골 앞단 수직선과 페달 스핀들이 일치해야 합니다. 일반 로드 안장 레일 조절 폭은 약 ±20~25mm 내외이며, 안장을 10mm 앞으로 당기면 안장 높이도 약 2~3mm 올려야 원래 거리가 유지됩니다.
             </p>
           </div>
 
@@ -361,7 +361,17 @@ export default function Home() {
               3. 기준점 스케일링 (mm 정밀 변환)
             </h4>
             <p className="leading-relaxed">
-              웹캠이나 사진의 픽셀(px) 좌표를 실제 밀리미터(mm) 단위로 보정하기 위해 700C 휠 지름(약 670mm)이나 크랭크 암 길이(170mm)를 기준으로 삼아 "안장 8mm 올리기" 등 오차 없는 정확한 조절량을 계산합니다.
+              픽셀(px) 좌표를 실제 밀리미터(mm) 단위로 보정하기 위해 700C 휠 지름(약 670mm)이나 휠베이스를 기준으로 삼아 "안장 8mm 올리기" 등 오차 없는 정확한 조절량을 계산합니다.
+            </p>
+          </div>
+
+          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
+            <h4 className="font-bold text-white mb-1.5 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-indigo-400" />
+              4. 모바일 셀프 촬영 앵글 가이드
+            </h4>
+            <p className="leading-relaxed">
+              스마트폰/아이패드로 셀프 촬영 시 카메라 렌즈 높이를 크랭크 축(80~90cm)에 맞추고, 자전거와 완전한 90도 수평 직각을 유지해야 원근 왜곡(Perspective Distortion) 없는 정밀 측정이 가능합니다.
             </p>
           </div>
         </div>

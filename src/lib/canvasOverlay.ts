@@ -332,3 +332,107 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
 }
+
+/**
+ * Draw shooting angle guide overlay for smartphone/tablet recording
+ * Helps users align camera at crank height and maintain 90-degree perpendicular angle
+ */
+export function drawShootingGuideOverlay(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  ctx.save();
+
+  // 1. Framing box for bike & rider (75~80% of canvas)
+  ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)'; // cyan translucent
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([8, 6]);
+  const marginX = width * 0.08;
+  const marginY = height * 0.12;
+  roundRect(ctx, marginX, marginY, width - marginX * 2, height - marginY * 2, 16);
+  ctx.stroke();
+
+  // Corner brackets to emphasize framing
+  ctx.setLineDash([]);
+  ctx.strokeStyle = '#06b6d4';
+  ctx.lineWidth = 3;
+  const cornerLen = 24;
+  // Top-left
+  ctx.beginPath();
+  ctx.moveTo(marginX, marginY + cornerLen);
+  ctx.lineTo(marginX, marginY);
+  ctx.lineTo(marginX + cornerLen, marginY);
+  ctx.stroke();
+  // Top-right
+  ctx.beginPath();
+  ctx.moveTo(width - marginX - cornerLen, marginY);
+  ctx.lineTo(width - marginX, marginY);
+  ctx.lineTo(width - marginX, marginY + cornerLen);
+  ctx.stroke();
+  // Bottom-left
+  ctx.beginPath();
+  ctx.moveTo(marginX, height - marginY - cornerLen);
+  ctx.lineTo(marginX, height - marginY);
+  ctx.lineTo(marginX + cornerLen, height - marginY);
+  ctx.stroke();
+  // Bottom-right
+  ctx.beginPath();
+  ctx.moveTo(width - marginX - cornerLen, height - marginY);
+  ctx.lineTo(width - marginX, height - marginY);
+  ctx.lineTo(width - marginX, height - marginY - cornerLen);
+  ctx.stroke();
+
+  // 2. Crank Height Horizontal Guide Line (at ~72% height or y=430)
+  const crankY = Math.round(height * 0.72);
+  ctx.strokeStyle = '#eab308'; // Amber/Yellow
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath();
+  ctx.moveTo(marginX - 20, crankY);
+  ctx.lineTo(width - marginX + 20, crankY);
+  ctx.stroke();
+
+  // Crank axis crosshair center point
+  const crankX = Math.round(width * 0.54);
+  ctx.fillStyle = '#eab308';
+  ctx.beginPath();
+  ctx.arc(crankX, crankY, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Horizontal line label badge
+  drawBadge(
+    ctx,
+    width / 2,
+    crankY - 14,
+    '🎯 카메라 렌즈 높이 맞춤선 (크랭크 축 BB Level / 지면에서 약 80~90cm)',
+    'rgba(161, 98, 7, 0.9)'
+  );
+
+  // 3. Vertical Perpendicular Axis (90-degree alignment)
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(crankX, marginY);
+  ctx.lineTo(crankX, height - marginY);
+  ctx.stroke();
+
+  // Right-angle symbol at intersection of (crankX, crankY)
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([]);
+  ctx.strokeRect(crankX + 4, crankY - 18, 14, 14);
+
+  // 4. Top guidance banner
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+  roundRect(ctx, width / 2 - 210, 12, 420, 26, 8);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('📱 스마트폰 수평 직각(90°) 유지 • 원근 왜곡 방지 오버레이 활성화됨', width / 2, 25);
+
+  ctx.restore();
+}

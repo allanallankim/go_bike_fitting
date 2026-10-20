@@ -8,8 +8,9 @@ import {
   analyzeFitting,
   calculateDistance,
 } from '../lib/fittingCalc';
-import { drawPoseOverlay, drawCalibrationRuler, CalibrationPin } from '../lib/canvasOverlay';
+import { drawPoseOverlay, drawCalibrationRuler, drawShootingGuideOverlay, CalibrationPin } from '../lib/canvasOverlay';
 import { convertMediaPipeLandmarks, getPoseLandmarker } from '../lib/visionPose';
+import { CameraAngleGuideModal } from './CameraAngleGuideModal';
 import {
   Play,
   Pause,
@@ -22,7 +23,10 @@ import {
   Sparkles,
   HelpCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  Grid,
+  Smartphone,
+  Info
 } from 'lucide-react';
 
 interface FittingCanvasProps {
@@ -64,6 +68,8 @@ export const FittingCanvas: React.FC<FittingCanvasProps> = ({
   const [showAngles, setShowAngles] = useState(true);
   const [showKopsPlumb, setShowKopsPlumb] = useState(true);
   const [isCalibratingMode, setIsCalibratingMode] = useState(false);
+  const [showShootingGuide, setShowShootingGuide] = useState(false);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
 
   // Dragging states
   const [hoverKey, setHoverKey] = useState<string | null>(null);
@@ -252,6 +258,11 @@ export const FittingCanvas: React.FC<FittingCanvasProps> = ({
         );
       }
 
+      // 4. Draw Shooting Guide Overlay (Crank height & 90-degree alignment)
+      if (showShootingGuide) {
+        drawShootingGuideOverlay(ctx, w, h);
+      }
+
       requestRef.current = requestAnimationFrame(render);
     };
 
@@ -273,6 +284,7 @@ export const FittingCanvas: React.FC<FittingCanvasProps> = ({
     showKopsPlumb,
     showSkeleton,
     isCalibratingMode,
+    showShootingGuide,
     calibrationPin,
     hoverKey,
     activeDraggingKey,
@@ -486,6 +498,26 @@ export const FittingCanvas: React.FC<FittingCanvasProps> = ({
             <Crosshair className="w-3.5 h-3.5" />
             기준점 측정 핀
           </button>
+          <button
+            onClick={() => setShowShootingGuide(!showShootingGuide)}
+            title="스마트폰/태블릿 촬영 보조 격자선 (크랭크 높이 & 90도 수평)"
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition ${
+              showShootingGuide
+                ? 'bg-teal-400 text-slate-950 font-bold ring-2 ring-teal-400/50'
+                : 'text-teal-400 hover:bg-teal-400/10'
+            }`}
+          >
+            <Grid className="w-3.5 h-3.5" />
+            가이드선
+          </button>
+          <button
+            onClick={() => setIsGuideModalOpen(true)}
+            title="스마트폰/태블릿 셀프 촬영 앵글 가이드 확인"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">촬영 가이드</span>
+          </button>
         </div>
       </div>
 
@@ -553,6 +585,16 @@ export const FittingCanvas: React.FC<FittingCanvasProps> = ({
             </button>
           )}
 
+          {/* Camera Angle Guide Trigger Button */}
+          <button
+            onClick={() => setIsGuideModalOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-cyan-400 rounded-xl border border-slate-700 transition"
+            title="스마트폰/태블릿 왜곡 방지 촬영 앵글 가이드"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span>촬영 앵글 가이드</span>
+          </button>
+
           <div className="text-slate-400 hidden sm:flex items-center gap-1">
             <HelpCircle className="w-3.5 h-3.5 text-slate-500" />
             <span>화면의 관절 마커(원형 점)를 마우스로 드래그하여 미세 조정할 수 있습니다.</span>
@@ -600,6 +642,18 @@ export const FittingCanvas: React.FC<FittingCanvasProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Camera Angle Guide Modal */}
+      <CameraAngleGuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
+        onSelectUploadType={(type) => {
+          if (fileInputRef.current) {
+            fileInputRef.current.accept = type === 'video' ? 'video/*' : 'image/*';
+            fileInputRef.current.click();
+          }
+        }}
+      />
     </div>
   );
 };
